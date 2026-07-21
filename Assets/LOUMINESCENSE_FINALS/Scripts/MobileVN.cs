@@ -8,6 +8,8 @@ public class MobileVN : MonoBehaviour
 {
     PlayerInput touchSystem;
     Vector2 currentTouchPos;
+    AudioSource soundPlayer;
+    [SerializeField] AudioClip[] sfx;
     [Header("Essential Assets")]
     [SerializeField] Sprite[] chara;
     [SerializeField] Sprite[] background;
@@ -23,17 +25,21 @@ public class MobileVN : MonoBehaviour
     [SerializeField] TextMeshProUGUI dialogueText;
     [SerializeField] CanvasGroup nameGroup;
     [SerializeField] TextMeshProUGUI nameText;
+    [SerializeField] CanvasGroup missionGroup;
     [SerializeField] Image missionBox;
     [SerializeField] TextMeshProUGUI missionTitleText;
     [SerializeField] TextMeshProUGUI missionText;
+    [Header("UI References - Others")]
+    [SerializeField] CanvasGroup[] ActionMenu;
     [Header("Dialogues and Missions")]
     int currentMission = 0;
     int currentDialogue = 0;
+    int currentObjective = 0;
     bool isDialogueOngoing;
-    [SerializeField] DialogueManager[] dialogues;
+    bool isObjectiveListShown = false;
     [SerializeField] MissionManager[] missions;
 
-    public void ToggleCharacterGroup(bool active)
+    void ToggleCharacterGroup(bool active)
     {
         if (active)
         {
@@ -49,7 +55,7 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void SetDisplayCharacter(bool isLeft, int characterID)
+    void SetDisplayCharacter(bool isLeft, int characterID)
     {
         if (characterID >= chara.Length || characterID < 0)
         {
@@ -62,7 +68,7 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void ToggleCharacter(bool isLeft, bool active)
+    void ToggleCharacter(bool isLeft, bool active)
     {
         if (active)
         {
@@ -76,7 +82,7 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void ToggleDialogue(bool active)
+    void ToggleDialogue(bool active)
     {
         if (active)
         {
@@ -92,9 +98,9 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void SetDialogueText(string dialogue){ dialogueText.text = dialogue; }
+    void SetDialogueText(string dialogue){ dialogueText.text = dialogue; }
 
-    public void ToggleNameLabel(bool active)
+    void ToggleNameLabel(bool active)
     {
         if (active)
         {
@@ -110,9 +116,9 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void SetCustomNameLabel(string customName) { nameText.text = customName; }
+    void SetCustomNameLabel(string customName) { nameText.text = customName; }
 
-    public void SetCharacterNameLabel(int characterID)
+    void SetCharacterNameLabel(int characterID)
     {
         if (characterID >= chara.Length || characterID < 0)
         {
@@ -124,20 +130,58 @@ public class MobileVN : MonoBehaviour
         }
     }
 
-    public void LoadDialogue(int missionID, int dialogueIndex)
+    void LoadDialogue(int missionID, int dialogueIndex)
     {
-        if(missionID == 0)
+        isDialogueOngoing = true;
+        Debug.LogWarning("Dialogue Started.");
+        missions[missionID].dialogues[dialogueIndex].ResetDialogue();
+        SetDialogueText(missions[missionID].dialogues[dialogueIndex].GetCurrentDialogue());
+        ToggleDialogue(true); ToggleCharacterGroup(true);
+        if (missionID == 0)
         {
-            missionTitleText.text = missions[currentMission].GetMissionTitle();
-            isDialogueOngoing = true;
-            Debug.LogWarning("Dialogue Started.");
-            dialogues[dialogueIndex].ResetDialogue();
-            SetDialogueText(dialogues[dialogueIndex].GetCurrentDialogue());
-            ToggleDialogue(true); ToggleCharacterGroup(true);
-            if(dialogueIndex == 0)
+            if      (currentMission == 0 && missions[currentMission].GetObjectiveID() == 0)
             {
-                SetDisplayCharacter(true, 0); ToggleCharacter(true, true);
-                SetCharacterNameLabel(0); ToggleNameLabel(true);
+                if (dialogueIndex == 0 || dialogueIndex == 1 || dialogueIndex == 3 || dialogueIndex == 4)
+                {
+                    SetDisplayCharacter(true, 0); ToggleCharacter(true, true);
+                    SetCharacterNameLabel(0); ToggleNameLabel(true);
+                }
+            }
+            else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 1)
+            {
+                if(dialogueIndex == 8)
+                {
+                    SetDisplayCharacter(true, 0); ToggleCharacter(true, true);
+                    SetDisplayCharacter(false, 1); ToggleCharacter(false, true);
+                    SetCharacterNameLabel(0); ToggleNameLabel(true);
+                }
+            }
+            else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 2)
+            {
+            }
+        }
+        else if (missionID == 1)
+        {
+            if      (currentMission == 1 && missions[currentMission].GetObjectiveID() == 0)
+            {
+            }
+            else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 1)
+            {
+            }
+            else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 2)
+            {
+            }
+        }
+        else if (missionID == 2)
+        {
+            if      (currentMission == 2 && missions[currentMission].GetObjectiveID() == 0)
+            {
+            }
+            else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 1)
+            {
+            }
+            else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 2)
+            {
             }
         }
     }
@@ -146,47 +190,264 @@ public class MobileVN : MonoBehaviour
     {
         if (isDialogueOngoing)
         {
-            dialogues[currentDialogue].NextDialogue();
-            if (dialogues[currentDialogue].GetDialogueID() >= dialogues[currentDialogue].GetDialogueLength())
+            soundPlayer.PlayOneShot(sfx[1]);
+            missions[currentMission].dialogues[currentDialogue].NextDialogue();
+            if (missions[currentMission].dialogues[currentDialogue].GetDialogueID() >= missions[currentMission].dialogues[currentDialogue].GetDialogueLength())
             {
-                ToggleCharacter(true, false); ToggleCharacterGroup(false);
+                ToggleCharacter(true, false); ToggleCharacter(false, false); ToggleCharacterGroup(false);
                 ToggleNameLabel(false); ToggleDialogue(false);
                 isDialogueOngoing = false;
                 Debug.LogWarning("Dialogue Finished.");
-                if (currentDialogue == 0)
+                if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 0)
                 {
-                    missionText.text = missions[currentMission].GetCurrentObjective();
+                    if (currentDialogue == 4)
+                    {
+                        FinishObjective(5);
+                        LoadDialogue(currentMission, currentDialogue);
+                    }
+                    else
+                    {
+                        ToggleActionMenu(true);
+                    }
+                }
+                else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 1)
+                {
+                    if(currentDialogue == 5 || currentDialogue == 6 || currentDialogue == 7)
+                    {
+                        ToggleActionMenu(true);
+                    }
+                    else if(currentDialogue == 8)
+                    {
+                        FinishObjective(9);
+                        LoadDialogue(currentMission, currentDialogue);
+                    }
+                }
+                else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 0)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 1)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 0)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 1)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
                 }
             }
             else
             {
-                SetDialogueText(dialogues[currentDialogue].GetCurrentDialogue());
+                SetDialogueText(missions[currentMission].dialogues[currentDialogue].GetCurrentDialogue());
+                if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 0)
+                {
+                    if(currentDialogue == 2)
+                    {
+                        if (missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 3)
+                        {
+                            ToggleNameLabel(true);
+                            ToggleCharacter(true, true);
+                        }
+                        else
+                        {
+                            ToggleCharacter(true, false);
+                        }
+                    }
+                }
+                else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 1)
+                {
+                    if(currentDialogue == 6)
+                    {
+                        if (
+                            missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 1 ||
+                            missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 3)
+                        {
+                            SetDisplayCharacter(true, 0);
+                            SetDisplayCharacter(false, 1);
+                            ToggleNameLabel(true);
+                            ToggleCharacter(true, true);
+                            ToggleCharacter(false, true);
+                        }
+                        else if (
+                            missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 2 ||
+                            missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 4)
+                        { SetCharacterNameLabel(1); }
+                    }
+                    else if(currentDialogue == 8)
+                    {
+                        if (missions[currentMission].dialogues[currentDialogue].GetDialogueID() == 1)
+                        {
+                            SetCharacterNameLabel(1);
+                        }
+                    }
+                }
+                else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 0)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 1)
+                {
+
+                }
+                else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 0)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 1)
+                {
+
+                }
+                else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 2)
+                {
+
+                }
             }
         }
         else
         {
+            soundPlayer.PlayOneShot(sfx[2]);
             Debug.Log("Dialogue not ongoing");
+        }
+    }
+
+    private void FinishObjective(int nextDialogue)
+    {
+        currentObjective++;
+        soundPlayer.PlayOneShot(sfx[3]);
+        missions[currentMission].NextObjective();
+        missionText.text = missions[currentMission].GetCurrentObjective();
+        currentDialogue = nextDialogue;
+    }
+
+    public void ToggleObjectiveList()
+    {
+        if (isObjectiveListShown) { isObjectiveListShown = false; } else { isObjectiveListShown = true; }
+    }
+
+    void StartMission(int missionID)
+    {
+        missions[missionID].ResetObjective();
+        missionText.text = missions[missionID].GetCurrentObjective();
+        missionTitleText.text = missions[missionID].GetMissionTitle();
+    }
+
+    void ToggleActionMenu(bool active)
+    {
+        if (active)
+        {
+            ActionMenu[currentObjective].alpha = 1.0f;
+            ActionMenu[currentObjective].interactable = true;
+            ActionMenu[currentObjective].blocksRaycasts = true;
+        }
+        else
+        {
+            ActionMenu[currentObjective].alpha = 0.0f;
+            ActionMenu[currentObjective].interactable = false;
+            ActionMenu[currentObjective].blocksRaycasts = false;
         }
     }
 
     void Awake()
     {
         touchSystem = GetComponent<PlayerInput>();
+        soundPlayer = GetComponent<AudioSource>();
+        foreach (CanvasGroup AM in ActionMenu)
+        {
+            AM.alpha = 0.0f;
+            AM.interactable = false;
+            AM.blocksRaycasts = false;
+        }
     }
 
     void Start()
     {
+        StartMission(currentMission);
         LoadDialogue(currentMission, currentDialogue);
+    }
+
+    void Update()
+    {
+        if (isObjectiveListShown)
+        {
+            missionGroup.alpha = 1.0f;
+            missionGroup.interactable = true;
+            missionGroup.blocksRaycasts = true;
+        }
+        else
+        {
+            missionGroup.alpha = 0.0f;
+            missionGroup.interactable = false;
+            missionGroup.blocksRaycasts = false;
+        }
+        switch (currentObjective)
+        {
+            case 0: backgroundImage.sprite = background[0]; break;
+            case 1: backgroundImage.sprite = background[1]; break;
+            default: break;
+        }
     }
 
     public void OnPlayerTap(InputValue value)
     {
+        soundPlayer.PlayOneShot(sfx[0]);
         Debug.Log($"Touched in {currentTouchPos}");
-        UpdateDialogue();
     }
 
     public void OnGetTappedPosition(InputValue value)
     {
         currentTouchPos = value.Get<Vector2>();
+    }
+
+    public void M1O1_Action1() { currentDialogue = 1; LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
+    public void M1O1_Action2() { currentDialogue = 2; missions[currentMission].FinishObjective(); LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
+    public void M1O1_Action3()
+    {
+        ToggleActionMenu(false);
+        if (missions[currentMission].CheckObjectiveStatus())
+        {
+            currentDialogue = 4; LoadDialogue(currentMission, currentDialogue);
+        }
+        else
+        {
+            currentDialogue = 3; LoadDialogue(currentMission, currentDialogue);
+        }
+    }
+
+    public void M1O2_Action1() { currentDialogue = 6; missions[currentMission].FinishObjective(); LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
+    public void M1O2_Action2()
+    {
+        ToggleActionMenu(false);
+        if (missions[currentMission].CheckObjectiveStatus())
+        {
+            currentDialogue = 8; LoadDialogue(currentMission, currentDialogue);
+        }
+        else
+        {
+            currentDialogue = 7; LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false);
+        }
+        
     }
 }
