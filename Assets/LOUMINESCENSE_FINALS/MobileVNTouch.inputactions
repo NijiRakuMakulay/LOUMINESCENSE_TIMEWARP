@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "MobileVNTouch",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "4701ae49-0600-4171-bebd-14469980ccf6",
+            "actions": [
+                {
+                    "name": "PlayerTap",
+                    "type": "Button",
+                    "id": "d790a01a-48bf-42eb-9d6f-028e6f21c93f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "GetTappedPosition",
+                    "type": "PassThrough",
+                    "id": "985f61d6-6762-4bb7-9d11-dcd547fa7870",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "79ccb13a-b592-42d7-abaa-7beaafe67343",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PlayerTap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2fdb99d8-778a-49ae-aeba-41790695ceca",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GetTappedPosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
