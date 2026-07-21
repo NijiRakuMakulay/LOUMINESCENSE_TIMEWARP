@@ -26,10 +26,17 @@ public class MobileVN : MonoBehaviour
     [SerializeField] CanvasGroup nameGroup;
     [SerializeField] TextMeshProUGUI nameText;
     [SerializeField] CanvasGroup missionGroup;
+    [SerializeField] Button missionListButton;
     [SerializeField] Image missionBox;
     [SerializeField] TextMeshProUGUI missionTitleText;
     [SerializeField] TextMeshProUGUI missionText;
     [Header("UI References - Others")]
+    [SerializeField] CanvasGroup missionClearScreen;
+    [SerializeField] TextMeshProUGUI clearMessage;
+    [SerializeField] TextMeshProUGUI chapterCleared;
+    [SerializeField] TextMeshProUGUI allClear;
+    [SerializeField] Button continueButton;
+    [SerializeField] Button restartButton;
     [SerializeField] CanvasGroup[] ActionMenu;
     [Header("Dialogues and Missions")]
     int currentMission = 0;
@@ -130,6 +137,7 @@ public class MobileVN : MonoBehaviour
         }
     }
 
+    //Loads the dialogue from current mission (missionID), and the dialogue index provided from the array of dialogue managers from the mission manager (dialogueIndex).
     void LoadDialogue(int missionID, int dialogueIndex)
     {
         isDialogueOngoing = true;
@@ -186,6 +194,9 @@ public class MobileVN : MonoBehaviour
         }
     }
 
+    //The dialogue will update if the dialogue is ongoing.
+    //The if the dialogueID of the mission manager is higher than the length of the dialogue messages from the dialogue manager, the dialogue ends.
+    //Otherwise, the dialogue will continue.
     public void UpdateDialogue()
     {
         if (isDialogueOngoing)
@@ -200,55 +211,54 @@ public class MobileVN : MonoBehaviour
                 Debug.LogWarning("Dialogue Finished.");
                 if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 0)
                 {
-                    if (currentDialogue == 4)
-                    {
-                        FinishObjective(5);
-                        LoadDialogue(currentMission, currentDialogue);
-                    }
-                    else
-                    {
-                        ToggleActionMenu(true);
-                    }
+                    if (currentDialogue == 4) { FinishObjective(5); }
+                    else { ToggleActionMenu(true); }
                 }
                 else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 1)
                 {
-                    if(currentDialogue == 5 || currentDialogue == 6 || currentDialogue == 7)
-                    {
-                        ToggleActionMenu(true);
-                    }
-                    else if(currentDialogue == 8)
-                    {
-                        FinishObjective(9);
-                        LoadDialogue(currentMission, currentDialogue);
-                    }
+                    if (currentDialogue == 5 || currentDialogue == 6 || currentDialogue == 7) { ToggleActionMenu(true); }
+                    else if (currentDialogue == 8) { FinishObjective(9); }
                 }
                 else if (currentMission == 0 && missions[currentMission].GetObjectiveID() == 2)
                 {
-
+                    if(currentDialogue == 10 || currentDialogue == 11) { FinishMission(); }
+                    else { ToggleActionMenu(true); }
                 }
                 else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 0)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishObjective(1);
+                    //Placeholder Code Ends Here
                 }
                 else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 1)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishObjective(2);
+                    //Placeholder Code Ends Here
                 }
                 else if (currentMission == 1 && missions[currentMission].GetObjectiveID() == 2)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishMission();
+                    //Placeholder Code Ends Here
                 }
                 else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 0)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishObjective(1);
+                    //Placeholder Code Ends Here
                 }
                 else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 1)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishObjective(2);
+                    //Placeholder Code Ends Here
                 }
                 else if (currentMission == 2 && missions[currentMission].GetObjectiveID() == 2)
                 {
-
+                    //Placeholder Code Starts Here
+                    FinishMission();
+                    //Placeholder Code Ends Here
                 }
             }
             else
@@ -340,20 +350,65 @@ public class MobileVN : MonoBehaviour
         missions[currentMission].NextObjective();
         missionText.text = missions[currentMission].GetCurrentObjective();
         currentDialogue = nextDialogue;
+        SetMissionAndViewDialogue(currentMission, nextDialogue);
     }
 
+    void FinishMission()
+    {
+        isObjectiveListShown = false;
+        missionListButton.enabled = false;
+        chapterCleared.text = missions[currentMission].GetMissionTitle();
+        currentMission++;
+        soundPlayer.PlayOneShot(sfx[4]);
+        missionClearScreen.alpha = 1.0f;
+        missionClearScreen.interactable = true;
+        missionClearScreen.blocksRaycasts = true;
+        if (currentMission >= missions.Length)
+        {
+            missionTitleText.text = "THE END";
+            continueButton.gameObject.SetActive(false);
+            restartButton.gameObject.SetActive(true);
+            allClear.gameObject.SetActive(true);
+            Debug.Log("Thank you for playing!");
+        }
+        else
+        {
+            missionTitleText.text = "TO BE CONTINUED";
+            continueButton.gameObject.SetActive(true);
+            restartButton.gameObject.SetActive(false);
+            allClear.gameObject.SetActive(false);
+        }
+    }
+
+    //Press the book button to show or hide the objective window.
     public void ToggleObjectiveList()
     {
         if (isObjectiveListShown) { isObjectiveListShown = false; } else { isObjectiveListShown = true; }
     }
 
-    void StartMission(int missionID)
+    //Starts a quest.
+    public void StartMission()
     {
-        missions[missionID].ResetObjective();
-        missionText.text = missions[missionID].GetCurrentObjective();
-        missionTitleText.text = missions[missionID].GetMissionTitle();
+        missionListButton.enabled = true;
+        missionClearScreen.alpha = 0.0f;
+        missionClearScreen.interactable = false;
+        missionClearScreen.blocksRaycasts = false;
+        ToggleActionMenu(false);
+        currentObjective = 0;
+        currentDialogue = 0;
+        missions[currentMission].ResetObjective();
+        missionText.text = missions[currentMission].GetCurrentObjective();
+        missionTitleText.text = missions[currentMission].GetMissionTitle();
+        LoadDialogue(currentMission, currentDialogue);
     }
 
+    public void RestartGame()
+    {
+        currentMission = 0;
+        StartMission();
+    }
+
+    //The action menu is shown after a dialogue is finished. It is hidden while a dialogue is ongoing.
     void ToggleActionMenu(bool active)
     {
         if (active)
@@ -370,8 +425,16 @@ public class MobileVN : MonoBehaviour
         }
     }
 
+    void SetMissionAndViewDialogue(int mission, int dialogue)
+    {
+        currentMission = mission;
+        currentDialogue = dialogue;
+        LoadDialogue(currentMission, currentDialogue);
+    }
+
     void Awake()
     {
+        currentMission = 0;
         touchSystem = GetComponent<PlayerInput>();
         soundPlayer = GetComponent<AudioSource>();
         foreach (CanvasGroup AM in ActionMenu)
@@ -384,8 +447,7 @@ public class MobileVN : MonoBehaviour
 
     void Start()
     {
-        StartMission(currentMission);
-        LoadDialogue(currentMission, currentDialogue);
+        StartMission();
     }
 
     void Update()
@@ -402,11 +464,51 @@ public class MobileVN : MonoBehaviour
             missionGroup.interactable = false;
             missionGroup.blocksRaycasts = false;
         }
-        switch (currentObjective)
+        if (currentMission < missions.Length)
         {
-            case 0: backgroundImage.sprite = background[0]; break;
-            case 1: backgroundImage.sprite = background[1]; break;
-            default: break;
+            if (missions[currentMission].CheckObjectiveStatus())
+            {
+                missionText.color = new Color(0.2f, 1.0f, 0.2f);
+            }
+            else
+            {
+                missionText.color = new Color(1.0f, 1.0f, 1.0f);
+            }
+        }
+        else
+        {
+            missionListButton.enabled = false;
+            missionGroup.alpha = 0.0f;
+            missionGroup.interactable = false;
+            missionGroup.blocksRaycasts = false;
+        }
+        
+        if (currentMission == 0)
+        {
+            switch (currentObjective)
+            {
+                case 0: backgroundImage.sprite = background[0]; break;
+                case 1: backgroundImage.sprite = background[1]; break;
+                default: break;
+            }
+        }
+        else if (currentMission == 1)
+        {
+            switch (currentObjective)
+            {
+                case 0: backgroundImage.sprite = background[3]; break;
+                case 2: backgroundImage.sprite = background[4]; break;
+                default: break;
+            }
+        }
+        else if (currentMission == 2)
+        {
+            switch (currentObjective)
+            {
+                case 0: backgroundImage.sprite = background[4]; break;
+                case 2: backgroundImage.sprite = background[2]; break;
+                default: break;
+            }
         }
     }
 
@@ -421,33 +523,45 @@ public class MobileVN : MonoBehaviour
         currentTouchPos = value.Get<Vector2>();
     }
 
-    public void M1O1_Action1() { currentDialogue = 1; LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
-    public void M1O1_Action2() { currentDialogue = 2; missions[currentMission].FinishObjective(); LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
+    public void M1O1_Action1() { ToggleActionMenu(false); SetMissionAndViewDialogue(0, 1); }
+    public void M1O1_Action2() { ToggleActionMenu(false); missions[currentMission].FinishObjective(); SetMissionAndViewDialogue(0, 2); }
     public void M1O1_Action3()
     {
         ToggleActionMenu(false);
         if (missions[currentMission].CheckObjectiveStatus())
         {
-            currentDialogue = 4; LoadDialogue(currentMission, currentDialogue);
+            SetMissionAndViewDialogue(0, 4);
         }
         else
         {
-            currentDialogue = 3; LoadDialogue(currentMission, currentDialogue);
+            SetMissionAndViewDialogue(0, 3);
         }
     }
 
-    public void M1O2_Action1() { currentDialogue = 6; missions[currentMission].FinishObjective(); LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false); }
+    public void M1O2_Action1() { ToggleActionMenu(false); missions[currentMission].FinishObjective(); SetMissionAndViewDialogue(0, 6); }
     public void M1O2_Action2()
     {
         ToggleActionMenu(false);
         if (missions[currentMission].CheckObjectiveStatus())
         {
-            currentDialogue = 8; LoadDialogue(currentMission, currentDialogue);
+            SetMissionAndViewDialogue(0, 8);
         }
         else
         {
-            currentDialogue = 7; LoadDialogue(currentMission, currentDialogue); ToggleActionMenu(false);
+            SetMissionAndViewDialogue(0, 7);
         }
-        
+    }
+    public void M1O3_Action1()
+    {
+        ToggleActionMenu(false);
+        missions[currentMission].FinishObjective();
+        SetMissionAndViewDialogue(0, 10);
+    }
+
+    public void M1O3_Action2()
+    {
+        ToggleActionMenu(false);
+        missions[currentMission].FinishObjective();
+        SetMissionAndViewDialogue(0, 11);
     }
 }
